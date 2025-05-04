@@ -13,6 +13,10 @@ bit pattern generation.
 import numpy as np
 from typing import Generator, Union, Literal, List
 
+_BYTE_REV_TABLE = bytes.maketrans(
+    bytes(range(256)),
+    bytes(int(f'{i:08b}'[::-1], 2) for i in range(256))
+)
 
 class BitBrush:
     """
@@ -148,12 +152,11 @@ class BitBrush:
             return np.right_shift(result, np.uint64(bytes_needed * 8 - self.width))
 
         # Pure‑Python path
-        result = 0
         for i in range(bytes_needed):
-            byte = (value >> (i * 8)) & 0xFF
-            rev = self._mirror_lut[byte]
-            result |= rev << ((bytes_needed - 1 - i) * 8)
-        return result >> (bytes_needed * 8 - self.width)
+            byte = value.to_bytes((self.width + 7) // 8, 'big')
+            rb = byte.translate(_BYTE_REV_TABLE)
+            rev = int.from_bytes(rb, 'big')
+        return rev >> ((len(byte) *8) - self.width)
 
     def scan_patterns(self) -> Union[Generator[int, None, None], np.ndarray]:
         """
