@@ -192,7 +192,7 @@ class BitBrush:
         Returns:
             int: Number of bits set to 1 within the configured width.
         """
-        return bin(int(value) & self.mask).count('1')
+        return (int(value) & self.mask).bit_count()
 
     def visualize(self, value: int) -> str:
         """
